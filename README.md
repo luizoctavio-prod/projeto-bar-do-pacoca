@@ -44,9 +44,36 @@ mercearia.
 - `atualizar_produtos.py`: atualização de produtos
 - `realizar_vendas.py`: registro de vendas
 - `relatorio.py`: relatório de estoque
+- `api/`: API REST com FastAPI (categorias e produtos)
+- `docs/`: capturas de tela da documentação da API
 
 ## Status
 Em desenvolvimento. Próximos passos:
 - [ ] Menu único para acessar todas as funções
 - [ ] Tabelas de vendas e relatórios de faturamento
 - [ ] Interface web ou API
+
+- [x] API REST com FastAPI (categorias e produtos)
+- [ ] Interface web
+
+## API
+Para iniciar a API (com o ambiente virtual ativo):
+```
+uvicorn api.main:app --reload
+```
+A documentação interativa fica em http://127.0.0.1:8000/docs.
+As credenciais do banco ficam em um arquivo `.env`: copie o `.env.example`
+para `.env` e ajuste os valores.
+
+| Método | Endpoint | Descrição |
+|---|---|---|
+| GET | /categorias | Lista as categorias |
+| POST | /categorias | Cria uma categoria |
+| DELETE | /categorias/{id} | Remove uma categoria sem produtos |
+| GET | /produtos | Lista produtos (filtros: `categoria_id`, `busca`) |
+| GET | /produtos/{id} | Detalha um produto |
+| POST | /produtos | Cadastra um produto |
+| PUT | /produtos/{id} | Atualiza um produto |
+| DELETE | /produtos/{id} | Remove um produto |
+
+![Documentação da API](docs/swagger.png)
