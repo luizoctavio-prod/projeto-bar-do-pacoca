@@ -1,3 +1,4 @@
+from datetime import datetime
 from decimal import Decimal
 
 from pydantic import BaseModel, Field
@@ -20,3 +21,24 @@ class ProdutoCreate(BaseModel):
 
 class Produto(ProdutoCreate):
     id: int
+
+class ItemVendaCreate(BaseModel):
+    produto_id: int
+    quantidade: int = Field(gt=0)
+
+
+class VendaCreate(BaseModel):
+    itens: list[ItemVendaCreate] = Field(min_length=1)
+
+
+class ItemVenda(BaseModel):
+    produto_id: int
+    quantidade: int
+    preco_unitario: Decimal
+
+
+class Venda(BaseModel):
+    id: int
+    data_hora: datetime
+    total: Decimal
+    itens: list[ItemVenda]

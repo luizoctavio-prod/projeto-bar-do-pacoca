@@ -75,5 +75,7 @@ para `.env` e ajuste os valores.
 | POST | /produtos | Cadastra um produto |
 | PUT | /produtos/{id} | Atualiza um produto |
 | DELETE | /produtos/{id} | Remove um produto |
+| POST | /vendas | Registra uma venda e baixa o estoque (tudo ou nada) |
+| GET | /vendas/{id} | Detalha uma venda e seus itens |
 
 ![Documentação da API](docs/swagger.png)
