@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import date, datetime
 from decimal import Decimal
 
 from pydantic import BaseModel, Field
@@ -26,6 +26,17 @@ class ItemVendaCreate(BaseModel):
     produto_id: int
     quantidade: int = Field(gt=0)
 
+class MaisVendido(BaseModel):
+    produto_id: int
+    nome: str
+    quantidade_vendida: int
+    faturamento: Decimal
+
+
+class FaturamentoDia(BaseModel):
+    dia: date
+    vendas: int
+    faturamento: Decimal
 
 class VendaCreate(BaseModel):
     itens: list[ItemVendaCreate] = Field(min_length=1)

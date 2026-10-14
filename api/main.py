@@ -1,6 +1,8 @@
-from decimal import Decimal
-from api.schemas import (Categoria, CategoriaCreate, Produto, ProdutoCreate,
-                         Venda, VendaCreate)
+from fastapi import Depends, FastAPI, HTTPException, Query, Response, status
+
+from api.schemas import (Categoria, CategoriaCreate, FaturamentoDia,
+                         MaisVendido, Produto, ProdutoCreate, Venda,
+                         VendaCreate)
 
 from fastapi import Depends, FastAPI, HTTPException, Response, status
 from psycopg2 import errors
@@ -244,3 +246,74 @@ def obter_venda(venda_id: int, db=Depends(get_db)):
         itens = cur.fetchall()
     return {**venda, "itens": itens}
 
+# ---------- Relatórios ----------
+
+@app.get("/relatorios/mais-vendidos", response_model=list[MaisVendido],
+         tags=["Relatórios"])
+def produtos_mais_vendidos(dias: int = Query(30, ge=1, le=365),
+                           limite: int = Query(10, ge=1, le=100),
+                           db=Depends(get_db)):
+    with db.cursor() as cur:
+        cur.execute(
+            """
+            SELECT p.id AS produto_id,
+                   p.nome,
+                   SUM(i.quantidade)::int AS quantidade_vendida,
+                   SUM(i.quantidade * i.preco_unitario) AS faturamento
+            FROM itens_venda i
+            JOIN vendas v   ON v.id = i.venda_id
+            JOIN produtos p ON p.id = i.produto_id
+            WHERE v.data_hora >= CURRENT_DATE - %s
+            GROUP BY p.id, p.nome
+            ORDER BY quantidade_vendida DESC, p.nome
+            LIMIT %s;
+            """,
+            (dias, limite),
+        )
+        return cur.fetchall()
+
+
+@app.get("/relatorios/faturamento-diario", response_model=list[FaturamentoDia],
+         tags=["Relatórios"])
+def faturamento_diario(dias: int = Query(30, ge=1, le=365),
+                       db=Depends(get_db)):
+    with db.cursor() as cur:
+        cur.execute(
+            """
+            SELECT v.data_hora::date AS dia,
+                   COUNT(*)::int     AS vendas,
+                   SUM(v.total)      AS faturamento
+            FROM vendas v
+            WHERE v.data_hora >= CURRENT_DATE - %s
+            GROUP BY dia
+            ORDER BY dia;
+            """,
+            (dias,),
+        )
+        return cur.fetchall()
+
+
+@app.get("/relatorios/estoque-baixo", response_model=list[Produto],
+         tags=["Relatórios"])
+def estoque_baixo(limite: int = Query(20, ge=0),
+                  dias: int = Query(30, ge=1, le=365),
+                  db=Depends(get_db)):
+    """Produtos vendidos no período cujo estoque está no limite ou abaixo."""
+    with db.cursor() as cur:
+        cur.execute(
+            f"""
+            SELECT {COLUNAS_PRODUTO}
+            FROM produtos p
+            WHERE p.estoque <= %s
+              AND EXISTS (
+                  SELECT 1
+                  FROM itens_venda i
+                  JOIN vendas v ON v.id = i.venda_id
+                  WHERE i.produto_id = p.id
+                    AND v.data_hora >= CURRENT_DATE - %s
+              )
+            ORDER BY p.estoque, p.id;
+            """,
+            (limite, dias),
+        )
+        return cur.fetchall()
