@@ -46,6 +46,15 @@ mercearia.
 - `relatorio.py`: relatório de estoque
 - `api/`: API REST com FastAPI (categorias e produtos)
 - `docs/`: capturas de tela da documentação da API
+- `tests/`: testes automáticos (pytest)
+
+## Testes
+
+Os testes automáticos usam um banco separado (`mercearia_test`), criado
+sozinho a partir do `schema.sql`, e não tocam no banco principal.
+
+Cobrem: venda com baixa de estoque, estoque insuficiente, produto inexistente,
+validação de dados, transação "tudo ou nada", relatórios e regras de exclusão.
 
 ## Status
 Em desenvolvimento. Próximos passos:

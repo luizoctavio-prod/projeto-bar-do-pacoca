@@ -1,19 +1,17 @@
-from fastapi import Depends, FastAPI, HTTPException, Query, Response, status
+from decimal import Decimal
 
+from fastapi import Depends, FastAPI, HTTPException, Query, Response, status
+from psycopg2 import errors
+
+from api.database import get_db
 from api.schemas import (Categoria, CategoriaCreate, FaturamentoDia,
                          MaisVendido, Produto, ProdutoCreate, Venda,
                          VendaCreate)
 
-from fastapi import Depends, FastAPI, HTTPException, Response, status
-from psycopg2 import errors
-
-from api.database import get_db
-from api.schemas import Categoria, CategoriaCreate, Produto, ProdutoCreate
-
 app = FastAPI(
     title="API - Bar do Paçoca",
-    description="Controle de categorias e produtos do estabelecimento.",
-    version="0.1.0",
+    description="Controle de categorias, produtos e vendas do estabelecimento.",
+    version="0.2.0",
 )
 
 COLUNAS_PRODUTO = "id, nome, categoria_id, preco, estoque"
@@ -57,7 +55,7 @@ def excluir_categoria(categoria_id: int, db=Depends(get_db)):
                                     "Categoria não encontrada.")
         db.commit()
         return Response(status_code=status.HTTP_204_NO_CONTENT)
-    except errors.ForeignKeyViolation:
+    except (errors.ForeignKeyViolation, errors.RestrictViolation):
         db.rollback()
         raise HTTPException(status.HTTP_409_CONFLICT,
                             "A categoria ainda possui produtos.")
@@ -157,12 +155,13 @@ def excluir_produto(produto_id: int, db=Depends(get_db)):
                                     "Produto não encontrado.")
         db.commit()
         return Response(status_code=status.HTTP_204_NO_CONTENT)
-    except errors.ForeignKeyViolation:
+    except (errors.ForeignKeyViolation, errors.RestrictViolation):
         db.rollback()
         raise HTTPException(status.HTTP_409_CONFLICT,
                             "O produto já tem vendas e não pode ser removido.")
 
-# ---------- Vendas ---------- #
+
+# ---------- Vendas ----------
 
 @app.post("/vendas", response_model=Venda,
           status_code=status.HTTP_201_CREATED, tags=["Vendas"])
@@ -245,6 +244,7 @@ def obter_venda(venda_id: int, db=Depends(get_db)):
         )
         itens = cur.fetchall()
     return {**venda, "itens": itens}
+
 
 # ---------- Relatórios ----------
 
