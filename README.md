@@ -47,6 +47,15 @@ mercearia.
 - `api/`: API REST com FastAPI (categorias e produtos)
 - `docs/`: capturas de tela da documentação da API
 - `tests/`: testes automáticos (pytest)
+- `Dockerfile` e `docker-compose.yml`: execução da API e do banco em contêineres
+
+## Rodando com Docker
+Sobe a API e o PostgreSQL com um comando, sem instalar nada além do Docker:
+
+```
+cp .env.example .env
+docker compose up --build
+```
 
 ## Testes
 
